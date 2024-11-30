@@ -35,7 +35,7 @@
 - type: loadout
   id: BrigmedicBelt
   equipment:
-    belt: ClothingBeltMedicalFilled
+    belt: ClothingBeltBrigmedic
 
 # Outerclothing
 - type: loadout
