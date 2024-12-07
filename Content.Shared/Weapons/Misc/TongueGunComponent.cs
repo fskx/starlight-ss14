@@ -25,10 +25,10 @@ public sealed partial class TongueGunComponent : Component
     public float ThrowForce = 30f;
 
     /// <summary>
-    /// The entity currently tethered.
+    /// The entity currently being pulled.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("tethered"), AutoNetworkedField]
-    public EntityUid? Tethered { get; set; }
+    [ViewVariables(VVAccess.ReadWrite), DataField("entityBeingPulled"), AutoNetworkedField]
+    public EntityUid? EntityBeingPulled { get; set; }
 
     /// <summary>
     /// Max force between the tether entity and the tethered target.

@@ -42,6 +42,7 @@ public abstract class SharedTongueGunSystem : EntitySystem
     [Dependency] private readonly INetManager _netManager = default!;
     [Dependency] private readonly ActionBlockerSystem _blocker = default!;
     [Dependency] private readonly MobStateSystem _mob = default!;
+    [Dependency] private readonly StatusEffectsSystem _statusEffect = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
@@ -77,23 +78,21 @@ public abstract class SharedTongueGunSystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var tetheredQuery = EntityQueryEnumerator<TonguedComponent, PhysicsComponent>();
+        var tetheredQuery = EntityQueryEnumerator<BeingPulledComponent, PhysicsComponent>();
 
         while (tetheredQuery.MoveNext(out var uid, out _, out var physics)) // You're very much welcome to replace this all with PullVirtualController
         {
-        var tetheredComp = EnsureComp<TonguedComponent>(uid);
-        var tethererPos = TransformSystem.GetWorldPosition(tetheredComp.Tetherer);
+        var beingPulledComp = EnsureComp<BeingPulledComponent>(uid);
+        var tethererPos = TransformSystem.GetWorldPosition(beingPulledComp.Puller);
         var targetPos = TransformSystem.GetWorldPosition(uid);
-
-        if ((tethererPos - targetPos).Length() <=0.2f)
-        {
-            StopPulling(tetheredComp.Tetherer, EnsureComp<TongueGunComponent>(tetheredComp.Tetherer), true);
-            continue;
-        }
 
         var velocity = 10;
         var direction = (tethererPos - targetPos).Normalized();
-
+        if ((tethererPos - targetPos).Length() <=0.2f)
+        {
+            StopPulling(beingPulledComp.Puller, EnsureComp<TongueGunComponent>(beingPulledComp.Puller), true);
+            velocity = 0;
+        }
         _physics.SetLinearVelocity(uid, direction * velocity, body: physics);
         }
     }
@@ -101,7 +100,7 @@ public abstract class SharedTongueGunSystem : EntitySystem
     private void OnTongueShot(EntityUid uid, TongueGunComponent component, ref AfterInteractEvent args)
     {
         _sawmill.Error("tongue gun shot");
-        if (component.Tethered != null) {StopPulling(uid, component, true); return; }// Stops pulling if tether already active
+        if (component.EntityBeingPulled != null) {StopPulling(uid, component, true); return; }// Stops pulling if tether already active
         if (args.Target == null || !_mob.IsAlive(args.Target.Value)) return;
         StartPulling(uid, component, args.Target.Value, args.User);
         TransformSystem.SetCoordinates(component.TetherEntity!.Value, new EntityCoordinates(uid, new Vector2(0f, 0f)));
@@ -113,17 +112,17 @@ public abstract class SharedTongueGunSystem : EntitySystem
         if (!Resolve(target, ref targetPhysics, ref targetXform)) return;
         // Target updates
         TransformSystem.Unanchor(target, targetXform);
-        component.Tethered = target;
-        var tethered = EnsureComp<TonguedComponent>(target);
+        component.EntityBeingPulled = target;
+        var tethered = EnsureComp<BeingPulledComponent>(target);
         _physics.SetBodyStatus(target, targetPhysics, BodyStatus.InAir, false);
         _physics.SetSleepingAllowed(target, targetPhysics, false);
-        tethered.Tetherer = gunUid;
+        tethered.Puller = gunUid;
         _physics.SetLinearDamping(target, targetPhysics, 0f);
         _physics.WakeBody(target, body: targetPhysics);
-        var thrown = EnsureComp<ThrownItemComponent>(component.Tethered.Value);
+        var thrown = EnsureComp<ThrownItemComponent>(component.EntityBeingPulled.Value);
         thrown.Thrower = gunUid;
         _blocker.UpdateCanMove(target);
-
+        _statusEffect.TryAddStatusEffect<KnockedDownComponent>(uid, "KnockedDown", 100000, refresh);
         // Invisible tether entity
         var tether = Spawn("TetherEntity", TransformSystem.GetMapCoordinates(target));
         var tetherPhysics = Comp<PhysicsComponent>(tether);
@@ -137,7 +136,7 @@ public abstract class SharedTongueGunSystem : EntitySystem
     protected virtual void StopPulling(EntityUid gunUid, TongueGunComponent component, bool land = true, bool transfer = false)
     {
         _sawmill.Error($"on stop pulling {gunUid}, {component}, ");
-        if (component.Tethered == null)
+        if (component.EntityBeingPulled == null)
             return;
 
         if (component.TetherEntity != null)
@@ -148,27 +147,28 @@ public abstract class SharedTongueGunSystem : EntitySystem
             component.TetherEntity = null;
         }
 
-        if (TryComp<PhysicsComponent>(component.Tethered, out var targetPhysics))
+        if (TryComp<PhysicsComponent>(component.EntityBeingPulled, out var targetPhysics))
         {
             if (land)
             {
-                var thrown = EnsureComp<ThrownItemComponent>(component.Tethered.Value);
-                _thrown.LandComponent(component.Tethered.Value, thrown, targetPhysics, true);
-                _thrown.StopThrow(component.Tethered.Value, thrown);
+                var thrown = EnsureComp<ThrownItemComponent>(component.EntityBeingPulled.Value);
+                _thrown.LandComponent(component.EntityBeingPulled.Value, thrown, targetPhysics, true);
+                _thrown.StopThrow(component.EntityBeingPulled.Value, thrown);
             }
 
-            _physics.SetBodyStatus(component.Tethered.Value, targetPhysics, BodyStatus.OnGround);
-            _physics.SetSleepingAllowed(component.Tethered.Value, targetPhysics, true);
+            _physics.SetBodyStatus(component.EntityBeingPulled.Value, targetPhysics, BodyStatus.OnGround);
+            _physics.SetSleepingAllowed(component.EntityBeingPulled.Value, targetPhysics, true);
         }
 
         TryComp<AppearanceComponent>(gunUid, out var appearance);
         _appearance.SetData(gunUid, TetherVisualsStatus.Key, false, appearance);
         _appearance.SetData(gunUid, ToggleableLightVisuals.Enabled, false, appearance);
 
-        RemComp<TonguedComponent>(component.Tethered.Value);
+        RemComp<BeingPulledComponent>(component.EntityBeingPulled.Value);
+        RemComp<KnockedDownComponent>(component.EntityBeingPulled.Value);
         _sawmill.Error("deleted tongued? i think...");
-        _blocker.UpdateCanMove(component.Tethered.Value);
-        component.Tethered = null;
+        _blocker.UpdateCanMove(component.EntityBeingPulled.Value);
+        component.EntityBeingPulled = null;
         Dirty(gunUid, component);
     }
 

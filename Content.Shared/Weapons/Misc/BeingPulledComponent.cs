@@ -6,8 +6,8 @@ namespace Content.Shared.Weapons.Misc;
 /// Added to entities tethered by a tethergun.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-public sealed partial class TonguedComponent : Component
+public sealed partial class BeingPulledComponent : Component
 {
-    [DataField("tetherer"), AutoNetworkedField]
-    public EntityUid Tetherer; // Basically smoker or whoever uses the tongue gun
+    [DataField("puller"), AutoNetworkedField]
+    public EntityUid Puller; // Basically smoker or whoever uses the tongue gun
 }
