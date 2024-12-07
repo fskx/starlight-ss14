@@ -40,6 +40,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     public override void Initialize()
     {
+        _sawmill.Error("init tether gun");
         base.Initialize();
         SubscribeLocalEvent<TetherGunComponent, ActivateInWorldEvent>(OnTetherActivate);
         SubscribeLocalEvent<TetherGunComponent, AfterInteractEvent>(OnTetherRanged);
@@ -80,12 +81,12 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
-
         // Just to set the angular velocity due to joint funnies
         var tetheredQuery = EntityQueryEnumerator<TetheredComponent, PhysicsComponent>();
 
         while (tetheredQuery.MoveNext(out var uid, out _, out var physics))
         {
+             _sawmill.Error("tether update");
             var sign = Math.Sign(physics.AngularVelocity);
 
             if (sign == 0)
@@ -104,6 +105,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     private void OnTetherMove(RequestTetherMoveEvent msg, EntitySessionEventArgs args)
     {
+        _sawmill.Error("on tether move");
         var user = args.SenderSession.AttachedEntity;
 
         if (user == null)
@@ -128,6 +130,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     private void OnTetherRanged(EntityUid uid, TetherGunComponent component, AfterInteractEvent args)
     {
+        _sawmill.Error("on tether ranged");
         if (args.Target == null || args.Handled)
             return;
 
@@ -152,6 +155,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     private void OnTetherActivate(EntityUid uid, TetherGunComponent component, ActivateInWorldEvent args)
     {
+        _sawmill.Error("on tether activate");
         if (!args.Complex)
             return;
 
@@ -160,6 +164,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     public bool TryTether(EntityUid gun, EntityUid target, EntityUid? user, BaseForceGunComponent? component = null)
     {
+        _sawmill.Error("on try tether");
         if (!Resolve(gun, ref component))
             return false;
 
@@ -172,6 +177,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     protected virtual bool CanTether(EntityUid uid, BaseForceGunComponent component, EntityUid target, EntityUid? user)
     {
+        _sawmill.Error("on can tether");
         if (HasComp<TetheredComponent>(target) || !TryComp<PhysicsComponent>(target, out var physics))
             return false;
 
@@ -194,6 +200,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
     protected virtual void StartTether(EntityUid gunUid, BaseForceGunComponent component, EntityUid target, EntityUid? user,
         PhysicsComponent? targetPhysics = null, TransformComponent? targetXform = null)
     {
+        _sawmill.Error("on start tether");
         if (!Resolve(target, ref targetPhysics, ref targetXform))
             return;
 
@@ -245,6 +252,7 @@ public abstract partial class SharedTetherGunSystem : EntitySystem
 
     protected virtual void StopTether(EntityUid gunUid, BaseForceGunComponent component, bool land = true, bool transfer = false)
     {
+        _sawmill.Error("on stop tether");
         if (component.Tethered == null)
             return;
 

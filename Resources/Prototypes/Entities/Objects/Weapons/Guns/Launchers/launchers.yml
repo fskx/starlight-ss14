@@ -249,6 +249,27 @@
                 False: { visible: false }
 
 - type: entity
+  name: tongue gun
+  parent:
+    - BaseItem
+  id: TongueGun
+  description: Manipulates gravity around objects to fling them at high velocities.
+  components:
+    - type: Item
+      storedRotation: -90
+    - type: TongueGun
+    - type: ItemToggle
+      onUse: false
+    - type: Sprite
+      sprite: Objects/Weapons/Guns/Launchers/grappling_gun.rsi
+      layers:
+        - state: base
+        - state: base-unshaded
+          map: [ "unshaded" ]
+          visible: true
+
+
+- type: entity
   name: grappling gun
   parent: BaseItem
   id: WeaponGrapplingGun

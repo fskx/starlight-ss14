@@ -30,9 +30,11 @@ public abstract class SharedGrapplingGunSystem : EntitySystem
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     public const string GrapplingJoint = "grappling";
-
+    private ISawmill _sawmill = default!;
     public override void Initialize()
     {
+        _sawmill = Logger.GetSawmill("grappling");
+         _sawmill.Error("init grappling gun");
         base.Initialize();
         SubscribeLocalEvent<GrapplingProjectileComponent, ProjectileEmbedEvent>(OnGrappleCollide);
         SubscribeLocalEvent<GrapplingProjectileComponent, JointRemovedEvent>(OnGrappleJointRemoved);

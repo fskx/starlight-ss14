@@ -6,14 +6,22 @@ namespace Content.Shared.Weapons.Misc;
 
 public abstract partial class SharedTetherGunSystem
 {
+    private ISawmill _sawmill = default!;
+    public SharedTetherGunSystem()
+    {
+        _sawmill = Logger.GetSawmill("tts");
+    }
+
     private void InitializeForce()
     {
+        _sawmill.Error("init force");
         SubscribeLocalEvent<ForceGunComponent, AfterInteractEvent>(OnForceRanged);
         SubscribeLocalEvent<ForceGunComponent, ActivateInWorldEvent>(OnForceActivate);
     }
 
     private void OnForceActivate(EntityUid uid, ForceGunComponent component, ActivateInWorldEvent args)
     {
+        _sawmill.Error("onforceactivate");
         if (!args.Complex)
             return;
 
@@ -22,20 +30,24 @@ public abstract partial class SharedTetherGunSystem
 
     private void OnForceRanged(EntityUid uid, ForceGunComponent component, AfterInteractEvent args)
     {
+        _sawmill.Error("onforceranged");
         if (IsTethered(component))
         {
+            _sawmill.Error("istethered");
             if (!args.ClickLocation.TryDistance(EntityManager, TransformSystem, Transform(uid).Coordinates,
                     out var distance) ||
                 distance > component.ThrowDistance)
             {
+                _sawmill.Error("check loc return");
                 return;
             }
 
             // URGH, soon
             // Need auto states to be nicer + powercelldraw to be nicer
-            if (!_netManager.IsServer)
+            if (!_netManager.IsServer) {
+                _sawmill.Error("netman return");
                 return;
-
+            }
             // Launch
             var tethered = component.Tethered;
             StopTether(uid, component, land: false);
