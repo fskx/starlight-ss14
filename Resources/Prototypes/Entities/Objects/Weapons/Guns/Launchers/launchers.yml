@@ -258,6 +258,9 @@
     - type: Item
       storedRotation: -90
     - type: TongueGun
+      frequency: 15
+      dampingRatio: 4
+      massLimit: 50
     - type: ItemToggle
       onUse: false
     - type: Sprite

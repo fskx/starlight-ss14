@@ -4,5 +4,4 @@ namespace Content.Server.Weapons.Misc;
 
 public sealed class TongueGunSystem : SharedTongueGunSystem
 {
-
 }

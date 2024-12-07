@@ -31,7 +31,7 @@ public abstract partial class SharedTetherGunSystem
     private void OnForceRanged(EntityUid uid, ForceGunComponent component, AfterInteractEvent args)
     {
         _sawmill.Error("onforceranged");
-        if (IsTethered(component))
+        if (IsTethered(component)) // Launch on disable
         {
             _sawmill.Error("istethered");
             if (!args.ClickLocation.TryDistance(EntityManager, TransformSystem, Transform(uid).Coordinates,
