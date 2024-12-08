@@ -8,6 +8,8 @@ using Content.Shared.Physics;
 using Content.Shared.Projectiles;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Systems;
+using Content.Shared.Damage.Systems;
+using Content.Shared.StatusEffect;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
@@ -31,9 +33,13 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Content.Shared.Damage;
 using Robust.Shared.Physics.Components;
+using Content.Shared.Damage.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
+using Content.Shared.Stunnable;
+using Content.Shared.Mobs;
 
 namespace Content.Shared.Weapons.Misc;
 
@@ -53,11 +59,6 @@ public abstract class SharedTongueGunSystem : EntitySystem
     [Dependency] private readonly ThrownItemSystem _thrown = default!;
 
     private const string TetherJoint = "tether";
-
-    private const float SpinVelocity = MathF.PI;
-    private const float AngularChange = 1f;
-
-
 
     private ISawmill _sawmill = default!;
     public SharedTongueGunSystem()
@@ -88,9 +89,9 @@ public abstract class SharedTongueGunSystem : EntitySystem
 
         var velocity = 10;
         var direction = (tethererPos - targetPos).Normalized();
-        if ((tethererPos - targetPos).Length() <=0.2f)
+        if ((tethererPos - targetPos).Length() <=0.3f)
         {
-            StopPulling(beingPulledComp.Puller, EnsureComp<TongueGunComponent>(beingPulledComp.Puller), true);
+            StartEating(beingPulledComp.Puller, EnsureComp<TongueGunComponent>(beingPulledComp.Puller), uid);
             velocity = 0;
         }
         _physics.SetLinearVelocity(uid, direction * velocity, body: physics);
@@ -103,7 +104,6 @@ public abstract class SharedTongueGunSystem : EntitySystem
         if (component.EntityBeingPulled != null) {StopPulling(uid, component, true); return; }// Stops pulling if tether already active
         if (args.Target == null || !_mob.IsAlive(args.Target.Value)) return;
         StartPulling(uid, component, args.Target.Value, args.User);
-        TransformSystem.SetCoordinates(component.TetherEntity!.Value, new EntityCoordinates(uid, new Vector2(0f, 0f)));
     }  
     protected virtual void StartPulling(EntityUid gunUid, TongueGunComponent component, EntityUid target, EntityUid? user,
     PhysicsComponent? targetPhysics = null, TransformComponent? targetXform = null)
@@ -122,30 +122,31 @@ public abstract class SharedTongueGunSystem : EntitySystem
         var thrown = EnsureComp<ThrownItemComponent>(component.EntityBeingPulled.Value);
         thrown.Thrower = gunUid;
         _blocker.UpdateCanMove(target);
-        _statusEffect.TryAddStatusEffect<KnockedDownComponent>(uid, "KnockedDown", 100000, refresh);
-        // Invisible tether entity
-        var tether = Spawn("TetherEntity", TransformSystem.GetMapCoordinates(target));
-        var tetherPhysics = Comp<PhysicsComponent>(tether);
-        component.TetherEntity = tether;
-        _physics.WakeBody(tether);
+        _statusEffect.TryAddStatusEffect<KnockedDownComponent>(target, "KnockedDown", TimeSpan.FromSeconds(1000), true);
 
         Dirty(target, tethered);
         Dirty(gunUid, component);
     }
 
-    protected virtual void StopPulling(EntityUid gunUid, TongueGunComponent component, bool land = true, bool transfer = false)
+    protected virtual void StartEating(EntityUid gunUid, TongueGunComponent component, EntityUid Prey)
+    {
+        StopPulling(gunUid, component, false);
+        Spawn("EffectSmokerEating", TransformSystem.GetMapCoordinates(Prey));
+        var passive_damage = EnsureComp<PassiveDamageComponent>(Prey);
+        passive_damage.Damage = new DamageSpecifier();
+        passive_damage.Damage.DamageDict.Add("Piercing", 8);
+        passive_damage.AllowedStates.Add(MobState.Critical);
+        passive_damage.Interval = 0.5f;
+        passive_damage.DamageCap = 200;
+        //entityManager.EnsureComponent<ZombifyOnDeathComponent>(Prey); (HORDE DO NOT ZOMBIFY!!!)
+        //entityManager.EnsureComponent<PendingZombieComponent>(Prey);
+    }
+
+    protected virtual void StopPulling(EntityUid gunUid, TongueGunComponent component, bool wake = true, bool land = true, bool transfer = false)
     {
         _sawmill.Error($"on stop pulling {gunUid}, {component}, ");
         if (component.EntityBeingPulled == null)
             return;
-
-        if (component.TetherEntity != null)
-        {
-            if (_netManager.IsServer)
-                QueueDel(component.TetherEntity.Value);
-
-            component.TetherEntity = null;
-        }
 
         if (TryComp<PhysicsComponent>(component.EntityBeingPulled, out var targetPhysics))
         {
@@ -165,8 +166,7 @@ public abstract class SharedTongueGunSystem : EntitySystem
         _appearance.SetData(gunUid, ToggleableLightVisuals.Enabled, false, appearance);
 
         RemComp<BeingPulledComponent>(component.EntityBeingPulled.Value);
-        RemComp<KnockedDownComponent>(component.EntityBeingPulled.Value);
-        _sawmill.Error("deleted tongued? i think...");
+        if (wake) RemComp<KnockedDownComponent>(component.EntityBeingPulled.Value);
         _blocker.UpdateCanMove(component.EntityBeingPulled.Value);
         component.EntityBeingPulled = null;
         Dirty(gunUid, component);
