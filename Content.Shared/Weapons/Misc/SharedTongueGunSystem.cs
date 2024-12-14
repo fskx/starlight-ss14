@@ -109,6 +109,7 @@ public abstract class SharedTongueGunSystem : EntitySystem
     PhysicsComponent? targetPhysics = null, TransformComponent? targetXform = null)
     {   
         _sawmill.Error("on start tether");
+        /// TODO: FIX !!!! SET MOVEMENT HERE TO 0, BECAUSE NOT ENTITIES CAN BE KNOCKEDDOWN
         if (!Resolve(target, ref targetPhysics, ref targetXform)) return;
         // Target updates
         TransformSystem.Unanchor(target, targetXform);
@@ -123,7 +124,6 @@ public abstract class SharedTongueGunSystem : EntitySystem
         thrown.Thrower = gunUid;
         _blocker.UpdateCanMove(target);
         _statusEffect.TryAddStatusEffect<KnockedDownComponent>(target, "KnockedDown", TimeSpan.FromSeconds(1000), true);
-
         Dirty(target, tethered);
         Dirty(gunUid, component);
     }
@@ -138,8 +138,16 @@ public abstract class SharedTongueGunSystem : EntitySystem
         passive_damage.AllowedStates.Add(MobState.Critical);
         passive_damage.Interval = 0.5f;
         passive_damage.DamageCap = 200;
+        // REPLACE PASSIVE DAMAGE COMPONENT, DOESNT WORK ON REAL MOUSE
+
         //entityManager.EnsureComponent<ZombifyOnDeathComponent>(Prey); (HORDE DO NOT ZOMBIFY!!!)
         //entityManager.EnsureComponent<PendingZombieComponent>(Prey);
+    }
+
+    protected void StopEating()
+    {
+        // delete entity with animations and music
+        
     }
 
     protected virtual void StopPulling(EntityUid gunUid, TongueGunComponent component, bool wake = true, bool land = true, bool transfer = false)
