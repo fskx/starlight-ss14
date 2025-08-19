@@ -21,6 +21,13 @@ public sealed class HumanoidAppearanceSystem : SharedHumanoidAppearanceSystem
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly DisplacementMapSystem _displacement = default!;
     [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private readonly ILogManager _log = default!;
+    private readonly ISawmill _sawmill;
+
+    public HumanoidAppearanceSystem()
+    {
+        _sawmill = _log.GetSawmill("HUMANOID APPEARANCE");
+    }
 
     public override void Initialize()
     {
@@ -147,6 +154,7 @@ public sealed class HumanoidAppearanceSystem : SharedHumanoidAppearanceSystem
     /// </remarks>
     public override void LoadProfile(EntityUid uid, HumanoidCharacterProfile? profile, HumanoidAppearanceComponent? humanoid = null)
     {
+        _sawmill.Error("LOADPROFILE");
         if (profile == null)
             return;
 
@@ -183,10 +191,10 @@ public sealed class HumanoidAppearanceSystem : SharedHumanoidAppearanceSystem
 
         // We need to ensure hair before applying it or coloring can try depend on markings that can be invalid
         var hairColor = _markingManager.MustMatchSkin(profile.Species, HumanoidVisualLayers.Hair, out var hairAlpha, _prototypeManager)
-            ? profile.Appearance.SkinColor.WithAlpha(hairAlpha)
-            : profile.Appearance.HairColor.WithAlpha(hairAlpha);
+            ? new List<Color> { profile.Appearance.SkinColor.WithAlpha(hairAlpha) } // Corvax-Wega-Hair-Extended
+            : profile.Appearance.HairColor; // Corvax-Wega-Hair-Extended
         var hair = new Marking(profile.Appearance.HairStyleId,
-            new[] { hairColor }, profile.Appearance.HairGlowing); //starlight
+            hairColor, profile.Appearance.HairGlowing); //starlight, Corvax-Wega-Hair-Extended
 
         var facialHairColor = _markingManager.MustMatchSkin(profile.Species, HumanoidVisualLayers.FacialHair, out var facialHairAlpha, _prototypeManager)
             ? profile.Appearance.SkinColor.WithAlpha(facialHairAlpha)
