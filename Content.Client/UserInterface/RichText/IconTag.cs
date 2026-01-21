@@ -27,12 +27,20 @@ public sealed class IconTag : IMarkupTag
             return false;
         }
         _spriteSystem ??= _entitySystem.GetEntitySystem<SpriteSystem>();
+        /* Starlight */
         AnimatedTextureRect? animated = null;
         TextureRect? icon = null;
 
-        if (_prototype.TryIndex<JobIconPrototype>(id.StringValue, out var iconPrototype))
+        JobIconPrototype? jobProto = null;
+        EmojiIconPrototype? emojiProto = null;
+        if (!_prototype.TryIndex<JobIconPrototype>(id.StringValue, out jobProto))
         {
-            var spec = iconPrototype.Icon;
+            _prototype.TryIndex<EmojiIconPrototype>(id.StringValue, out emojiProto);
+        }
+
+        if (jobProto != null || emojiProto != null)
+        {
+            var spec = jobProto != null ? jobProto.Icon : emojiProto!.Icon;
             try
             {
                 var state = _spriteSystem.RsiStateLike(spec);
@@ -80,7 +88,6 @@ public sealed class IconTag : IMarkupTag
                 icon.ToolTip = tooltip.StringValue;
         }
 
-        // Prefer animated control when available
         control = (Control?)animated ?? icon;
         return control != null;
     }

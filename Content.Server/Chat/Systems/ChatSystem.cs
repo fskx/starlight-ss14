@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Server.Chat.Managers;
@@ -89,6 +90,29 @@ public sealed partial class ChatSystem : SharedChatSystem
         Subs.CVar(_configurationManager, CCVars.CritLoocEnabled, OnCritLoocEnabledChanged, true);
 
         SubscribeLocalEvent<GameRunLevelChangedEvent>(OnGameChange);
+    }
+
+    private static readonly string[] SupportedEmojis =
+    {
+        "acute",
+        "facepalm",
+        "russian"
+    };
+
+    private static readonly Regex EmojiRegex = new(@"~([a-zA-Z0-9_]+)~", RegexOptions.Compiled);
+
+    private string RenderEmojis(string message)
+    {
+        return EmojiRegex.Replace(message, match =>
+        {
+            var name = match.Groups[1].Value.ToLowerInvariant();
+
+            if (!SupportedEmojis.Contains(name))
+                return match.Value;
+
+            var iconId = $"Emoji{char.ToUpper(name[0])}{name[1..]}";
+            return $"[icon src=\"{iconId}\"]";
+        });
     }
 
     private void OnLoocEnabledChanged(bool val)
@@ -587,7 +611,8 @@ public sealed partial class ChatSystem : SharedChatSystem
         if (!_actionBlocker.CanSpeak(source) && !ignoreActionBlocker)
             return;
 
-        var message = TransformSpeech(source, originalMessage, language); // Starlight-edit: Languages
+    var preEmoji = RenderEmojis(originalMessage); // Starlight
+    var message = TransformSpeech(source, preEmoji, language); // Starlight-edit: Languages
 
         if (message.Length == 0)
             return;
@@ -664,7 +689,10 @@ public sealed partial class ChatSystem : SharedChatSystem
         if (!_actionBlocker.CanSpeak(source) && !ignoreActionBlocker)
             return;
 
-        var message = TransformSpeech(source, FormattedMessage.RemoveMarkupOrThrow(originalMessage), language); // Starlight
+
+    var withoutMarkup = FormattedMessage.RemoveMarkupOrThrow(originalMessage); 
+    var preEmoji = RenderEmojis(withoutMarkup); // starlight
+    var message = TransformSpeech(source, preEmoji, language); // Starlight
         if (message.Length == 0)
             return;
 

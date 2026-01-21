@@ -1,0 +1,26 @@
+- type: emojiIcon
+  id: EmojiAcute
+  icon:
+    sprite: /Textures/_Starlight/Interface/Misc/Emoji/acute.rsi
+    state: animation
+
+- type: emojiIcon
+  id: EmojiFacepalm
+  icon:
+    sprite: /Textures/_Starlight/Interface/Misc/Emoji/facepalm.rsi
+    state: animation
+
+- type: emojiIcon
+  id: EmojiRussian
+  icon:
+    sprite: /Textures/_Starlight/Interface/Misc/Emoji/russian.rsi
+    state: animation
+
+# RADIO EMOJIS !!
+
+# TODO:
+# DURAK ONLINE STICKERS (check license)
+# VULP SHAKING ASS
+# BOYKISSER
+# SHY CURSED
+# LENNY

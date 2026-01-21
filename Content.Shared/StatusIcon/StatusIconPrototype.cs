@@ -216,6 +216,22 @@ public sealed partial class SsdIconPrototype : StatusIconPrototype, IInheritingP
     public bool Abstract { get; private set; }
 }
 
+/// <summary>
+/// Emoji icons separate from job icons.
+/// </summary>
+[Prototype]
+public sealed partial class EmojiIconPrototype : StatusIconPrototype, IInheritingPrototype
+{
+    /// <inheritdoc />
+    [ParentDataField(typeof(AbstractPrototypeIdArraySerializer<EmojiIconPrototype>))]
+    public string[]? Parents { get; private set; }
+
+    /// <inheritdoc />
+    [NeverPushInheritance]
+    [AbstractDataField]
+    public bool Abstract { get; private set; }
+}
+
 [Serializable, NetSerializable]
 public enum StatusIconLocationPreference : byte
 {

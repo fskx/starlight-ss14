@@ -34,6 +34,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Replays;
 using Robust.Shared.Utility;
+using System.Text.RegularExpressions;
 
 namespace Content.Server.Radio.EntitySystems;
 
@@ -158,6 +159,8 @@ public sealed class RadioSystem : EntitySystem
             ? FormattedMessage.EscapeText(message)
             : message;
 
+        content = RenderEmojis(content);
+
         _chime.TryGetSenderHeadsetChime(messageSource, out var chime);
 
         var wrappedMessage = WrapRadioMessage(messageSource, channel, name, content, language, false);
@@ -230,6 +233,29 @@ public sealed class RadioSystem : EntitySystem
     }
 
     // Starlight - Start
+    private static readonly string[] SupportedEmojis = 
+    {
+        "acute",
+        "facepalm",
+        "russian"
+    };
+    
+    private static readonly Regex EmojiRegex = new(@"~([a-zA-Z0-9_]+)~", RegexOptions.Compiled);
+
+    private string RenderEmojis(string message)
+    {
+        return EmojiRegex.Replace(message, match =>
+        {
+            var name = match.Groups[1].Value.ToLowerInvariant();
+
+            if (!SupportedEmojis.Contains(name))
+                return match.Value; 
+
+            var iconId = $"Emoji{char.ToUpper(name[0])}{name[1..]}";
+            return $"[icon src=\"{iconId}\"]";
+        });
+    }
+
     private (string, string) GetJobIcon(EntityUid messageSource)
     {
         var iconId = "JobIconNoId";
@@ -271,9 +297,7 @@ public sealed class RadioSystem : EntitySystem
             jobName = Loc.GetString("job-name-station-ai");
         }
 
-        jobName ??= ""; // TODO VULP SHAKING ASS
-        iconId = "EmojiUmbrage";
-        jobName = "";
+        jobName ??= "";
 
         return (iconId, jobName);
     }

@@ -1,0 +1,17 @@
+{
+    "version": 1,
+    "license": "Custom (Non-Commercial Use Allowed)",
+    "copyright": "kolobanga.ru, modified by github.com/fqqf",
+    "size": {
+        "x": 28,
+        "y": 28
+    },
+    "states": [
+        {
+            "name": "animation",
+            "delays": [
+                [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+            ]
+        }
+    ]
+}

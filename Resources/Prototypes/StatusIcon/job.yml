@@ -436,14 +436,6 @@
   jobName: chat-radio-mothership
 
 
-- type: jobIcon
-  parent: JobIcon
-  id: EmojiUmbrage
-  icon:
-    sprite: /Textures/_Starlight/Interface/Misc/emoji.rsi
-    state: umbrage
-  jobName: chat-radio-mothership
-
 # Admin
 
 - type: jobIcon
