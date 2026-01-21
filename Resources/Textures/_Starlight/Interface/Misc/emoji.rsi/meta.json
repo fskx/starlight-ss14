@@ -1,0 +1,19 @@
+{
+    "version": 1,
+    "license": "Custom (Non-Commercial Use Allowed)",
+    "copyright": "kolobanga.ru, modified by github.com/fqqf",
+    "size": {
+        "x": 23,
+        "y": 23
+    },
+    "states": [
+        {
+            "name": "umbrage",
+            "delays": [
+                [
+                    0.1, 0.1, 0.1, 0.1, 0.1, 0.1
+                ]
+            ]
+        }
+    ]
+}

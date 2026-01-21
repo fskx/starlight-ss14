@@ -271,7 +271,9 @@ public sealed class RadioSystem : EntitySystem
             jobName = Loc.GetString("job-name-station-ai");
         }
 
-        jobName ??= "";
+        jobName ??= ""; // TODO VULP SHAKING ASS
+        iconId = "EmojiUmbrage";
+        jobName = "";
 
         return (iconId, jobName);
     }
