@@ -113,6 +113,7 @@
   - type: Sprite
     sprite: _Starlight/Structures/Machines/VendingMachines/fashionmat.rsi
   - type: Store
+    grid: true
     name: vendor-fashion-o-mat
     categories:
     - SLFashionSkirt
@@ -160,6 +161,7 @@
     access: [["Theatre"]]
   - type: Store
     name: vendor-clown-dispenser
+    gridColumns: 5
     categories:
     - SLClown
   - type: Sprite

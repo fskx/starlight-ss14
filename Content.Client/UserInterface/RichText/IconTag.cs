@@ -27,20 +27,65 @@ public sealed class IconTag : IMarkupTag
             return false;
         }
         _spriteSystem ??= _entitySystem.GetEntitySystem<SpriteSystem>();
-        var texture = _prototype.TryIndex<JobIconPrototype>(id.StringValue, out var iconPrototype)
-                ? _spriteSystem.Frame0(iconPrototype.Icon)
-                : null;
-        var icon = new TextureRect
+        /* Starlight start */
+        AnimatedTextureRect? animated = null;
+        TextureRect? icon = null;
+
+        _prototype.TryIndex<JobIconPrototype>(id.StringValue, out var jobProto);
+
+        if (jobProto != null)
         {
-            Texture = texture,
-            SetWidth = 20,
-            SetHeight = 20,
-            Stretch = TextureRect.StretchMode.Scale,
-            MouseFilter = Control.MouseFilterMode.Stop,
-        };
+            var spec = jobProto.Icon;
+            try
+            {
+                var state = _spriteSystem.RsiStateLike(spec);
+                if (state.IsAnimated)
+                {
+                    var anim = new AnimatedTextureRect();
+                    anim.SetFromSpriteSpecifier(spec);
+                    anim.DisplayRect.SetWidth = 20;
+                    anim.DisplayRect.SetHeight = 20;
+                    anim.DisplayRect.Stretch = TextureRect.StretchMode.Scale;
+                    anim.MouseFilter = Control.MouseFilterMode.Stop;
+                    animated = anim;
+                }
+                else
+                {
+                    var texture = _spriteSystem.Frame0(spec);
+                    icon = new TextureRect
+                    {
+                        Texture = texture,
+                        SetWidth = 20,
+                        SetHeight = 20,
+                        Stretch = TextureRect.StretchMode.Scale,
+                        MouseFilter = Control.MouseFilterMode.Stop,
+                    };
+                }
+            }
+            catch
+            {
+                // If anything goes wrong, fall back to texture
+                var texture = _spriteSystem.Frame0(spec);
+                icon = new TextureRect
+                {
+                    Texture = texture,
+                    SetWidth = 20,
+                    SetHeight = 20,
+                    Stretch = TextureRect.StretchMode.Scale,
+                    MouseFilter = Control.MouseFilterMode.Stop,
+                };
+            }
+        }
         if (node.Attributes.TryGetValue("tooltip", out var tooltip) && tooltip.StringValue != null)
-            icon.ToolTip = tooltip.StringValue;
-        control = icon;
-        return true;
+        {
+            if (animated != null)
+                animated.ToolTip = tooltip.StringValue;
+            else if (icon != null)
+                icon.ToolTip = tooltip.StringValue;
+        }
+
+        control = (Control?)animated ?? icon;
+        return control != null;
+        // Starlight end
     }
 }

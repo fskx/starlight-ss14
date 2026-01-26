@@ -131,7 +131,7 @@ public sealed partial class StoreSystem
         // only tell operatives to lock their uplink if it can be locked
         var showFooter = HasComp<RingerUplinkComponent>(store);
 
-        var state = new StoreUpdateState(component.LastAvailableListings, allCurrency, showFooter, component.RefundAllowed);
+    var state = new StoreUpdateState(component.LastAvailableListings, allCurrency, showFooter, component.RefundAllowed, component.Grid, component.GridColumns); // Starlight
         _ui.SetUiState(store, StoreUiKey.Key, state);
     }
 
@@ -425,7 +425,7 @@ public sealed partial class StoreSystem
         // Only tell operatives to lock their uplink if it can be locked
         var showFooter = HasComp<RingerUplinkComponent>(storeUid);
 
-        var state = new StoreUpdateState(storeComp.LastAvailableListings, allCurrency, showFooter, storeComp.RefundAllowed);
+    var state = new StoreUpdateState(storeComp.LastAvailableListings, allCurrency, showFooter, storeComp.RefundAllowed, storeComp.Grid, storeComp.GridColumns); // Starlight
 
         // Set the UI state - this will update all connected sessions automatically
         _ui.SetUiState(storeUid, StoreUiKey.Key, state);

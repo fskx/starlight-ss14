@@ -50,6 +50,19 @@ public sealed partial class StoreComponent : Component
     public HashSet<ListingDataWithCostModifiers> FullListingsCatalog = new();
 
     /// <summary>
+    /// If true, the client should render this store as a compact grid.
+    /// instead of the default list with descriptions.
+    /// </summary>
+    [DataField]
+    public bool Grid = false;
+
+    /// <summary>
+    /// Number of items per row when rendering in grid mode.
+    /// </summary>
+    [DataField]
+    public int GridColumns = 4;
+
+    /// <summary>
     /// All available listings from the last time that it was checked.
     /// </summary>
     [ViewVariables]

@@ -70,6 +70,8 @@ public sealed class StoreBoundUserInterface : BoundUserInterface
                 _listings = msg.Listings;
 
                 _menu?.UpdateBalance(msg.Balance);
+                _menu!.GridMode = msg.GridMode; // Starlight
+                _menu.GridColumns = msg.GridColumns;
 
                 UpdateListingsWithSearchFilter();
                 _menu?.SetFooterVisibility(msg.ShowFooter);
