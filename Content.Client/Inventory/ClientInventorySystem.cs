@@ -17,12 +17,12 @@ using Robust.Shared.Timing;
 namespace Content.Client.Inventory
 {
     [UsedImplicitly]
-    public sealed class ClientInventorySystem : InventorySystem
+    public sealed partial class ClientInventorySystem : InventorySystem
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly ClientClothingSystem _clothingVisualsSystem = default!;
-        [Dependency] private readonly ExamineSystem _examine = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IUserInterfaceManager _ui = default!;
+        [Dependency] private ClientClothingSystem _clothingVisualsSystem = default!;
+        [Dependency] private ExamineSystem _examine = default!;
 
         public Action<SlotData>? EntitySlotUpdate = null;
         public Action<SlotData>? OnSlotAdded = null;
@@ -49,7 +49,7 @@ namespace Content.Client.Inventory
             SubscribeLocalEvent<InventorySlotsComponent, DidUnequipEvent>((_, comp, args) =>
                 _equipEventsQueue.Enqueue((comp, args)));
         }
-        
+
         //Starlight begin
         private void OnStartup(Entity<InventorySlotsComponent> entity, ref ComponentStartup args)
         {
@@ -141,7 +141,7 @@ namespace Content.Client.Inventory
             var player = _playerManager.LocalEntity;
             if (player == null || !Resolve(player.Value, ref component, false))
                 return;
-            
+
             OnUnlinkInventory?.Invoke();
             OnLinkInventorySlots?.Invoke(player.Value, component);
         }
